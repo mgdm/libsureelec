@@ -172,9 +172,7 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
     dest = ctx->framebuffer + (20 * (line - 1));
     dest = memcpy(dest, data, data_size);
 
-    printf("\nFramebuffer: %s\n", ctx->framebuffer);
-
-    libsureelec_log("Writing %d characters to line %d: %s", data_size, line, data);
+    libsureelec_log("Framebuffer: %s\n", ctx->framebuffer);
    
     cmd[3] = line; 
     libsureelec_write(ctx, cmd, sizeof(cmd));
