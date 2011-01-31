@@ -49,7 +49,6 @@ static libsureelec_read(libsureelec_ctx *ctx, void *buf, size_t count) {
         tv.tv_sec = 1;	/* seconds */
         tv.tv_usec = 0;	/* microseconds */
 
-        printf("fd: %d", ctx->fd);
         retval = select(ctx->fd + 1, &rfds, NULL, NULL, &tv);
         if (retval) {
             int read_result = read(ctx->fd + 1, ((char *)buf) + read_count, count - read_count);
@@ -80,10 +79,9 @@ static int libsureelec_write(libsureelec_ctx *ctx, const unsigned char *seq, int
     return written_count;
 }
 
-static int libsureelec_write_char(libsureelec_ctx *ctx, const unsigned char seq, int count) {
+static int libsureelec_write_char(libsureelec_ctx *ctx, const unsigned char seq) {
     int written = 0;
 
-    printf("%x\n", seq);
     written = write(ctx->fd, &seq, 1);
     if (written == -1) {
         libsureelec_log("Cannot write to port: %s", strerror(errno));
@@ -97,10 +95,10 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     libsureelec_ctx *ctx = (libsureelec_ctx *) calloc(1, sizeof(libsureelec_ctx));
     ctx->fd = -1;
     struct termios port_config;
-	unsigned char cmd[3] = {'\xFE', '\x56', 0};
+	unsigned char cmd[5] = {'\xFE', 'S', 'u', 'r', 'e'};
     int i;
 
-    ctx->fd = open(device, O_RDWR | O_NOCTTY | O_NONBLOCK);
+    ctx->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
     if (ctx->fd == -1) {
         libsureelec_log("Failed to open port %s: ", device, strerror(errno));
         return NULL;
@@ -132,19 +130,10 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
         return NULL;
     }
     
-	for (i = 0; i < sizeof(init_seq); i++) {
-		if (libsureelec_write_char(ctx, (const unsigned char) '\xFE', 1) == -1
-		    || libsureelec_write_char(ctx, init_seq[i], 1) == -1) {
-            libsureelec_log("Cannot write init sequence to device %s on FD %d", device, ctx->fd);
-			return NULL;
-        }
-	}
-
-    if (libsureelec_write(ctx, init_seq, sizeof(init_seq)) == -1) {
-        libsureelec_log("Failed to initialize device %s", device);
-        return NULL;
-    }
-
+    
+    libsureelec_log("Sending init sequence to %s", device);
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+    usleep(100000);
     return ctx;
 }
 
@@ -157,7 +146,11 @@ LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx) {
 }
 
 LIBSUREELEC_EXPORT libsureelec_clear_display(libsureelec_ctx *ctx) {
-    
+    int line;
+
+    for (line = 1; line < 5; line++) {
+        libsureelec_write_line(ctx, "                    ", line);
+    }
 }
 
 LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *data, int line) {
@@ -187,4 +180,19 @@ LIBSUREELEC_EXPORT char * libsureelec_get_screen_size(libsureelec_ctx *ctx) {
     libsureelec_write(ctx, cmd, sizeof(cmd));
     libsureelec_read(ctx, &buf, sizeof(buf));
     return(buf);
+}
+
+LIBSUREELEC_EXPORT char * libsureelec_get_device_type(libsureelec_ctx *ctx) {
+    const unsigned char *cmd = "\3767";
+    char *buf = (char *) strdup("                  ");
+
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+    usleep(1000);
+    libsureelec_read(ctx, &buf, sizeof(buf));
+    return(buf);
+}
+
+LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx) {
+    const unsigned char cmd[2] = { '\xFE', '\x64' };
+    libsureelec_write(ctx, cmd, sizeof(cmd));
 }
