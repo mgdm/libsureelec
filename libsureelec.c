@@ -12,13 +12,10 @@
 
 #include "libsureelec.h"
 
-static unsigned char cmd_prefix[3] = {'\xFE', '\x56', 0};
-static unsigned char init_seq[5] = {'\xFE', 'S', 'u', 'r', 'e'};
-
-static int debug_mode = 1;
+static int libsureelec_debug_mode = 0;
 
 static void libsureelec_log(const char *format, ...) {
-    if (debug_mode) {
+    if (libsureelec_debug_mode) {
 		va_list ap;
 		va_start(ap, format); /* measure the required size (the number of elements of format) */
 
@@ -91,6 +88,7 @@ static int libsureelec_write_char(libsureelec_ctx *ctx, const unsigned char seq)
 }
 
 LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug) {
+    unsigned char init_seq[5] = {'\xFE', 'S', 'u', 'r', 'e'};
     libsureelec_ctx *ctx = (libsureelec_ctx *) calloc(1, sizeof(libsureelec_ctx));
     ctx->fd = -1;
     struct termios port_config;

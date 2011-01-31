@@ -9,8 +9,11 @@ typedef struct _libsureelec_ctx {
     unsigned char framebuffer[80];
 } libsureelec_ctx;
 
-LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_create(const char *device, int debug);
+LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug);
 LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT libsureelec_clear_display(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *data, int line);
-LIBSUREELEC_EXPORT char *libsureelec_get_screen_size(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT char * libsureelec_get_screen_size(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT char * libsureelec_get_device_type(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx);
+
