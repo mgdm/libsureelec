@@ -13,8 +13,7 @@
 #include "libsureelec.h"
 
 static unsigned char cmd_prefix[3] = {'\xFE', '\x56', 0};
-static unsigned char init_seq[7] = {'\x54', '\x58', '\x4B', '\x52', '\x44', '\x41', '\x60'};
-//static unsigned char init_seq[5] = {'\376','S','u','r','e'};
+static unsigned char init_seq[5] = {'\xFE', 'S', 'u', 'r', 'e'};
 
 static int debug_mode = 1;
 
@@ -95,7 +94,6 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     libsureelec_ctx *ctx = (libsureelec_ctx *) calloc(1, sizeof(libsureelec_ctx));
     ctx->fd = -1;
     struct termios port_config;
-	unsigned char cmd[5] = {'\xFE', 'S', 'u', 'r', 'e'};
     int i;
 
     ctx->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
@@ -132,7 +130,7 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     
     
     libsureelec_log("Sending init sequence to %s", device);
-    libsureelec_write(ctx, cmd, sizeof(cmd));
+    libsureelec_write(ctx, init_seq, sizeof(init_seq));
     usleep(100000);
     return ctx;
 }
