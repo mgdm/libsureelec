@@ -128,7 +128,8 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
         return NULL;
     }
     
-    
+    /* Fill framebuffer with spaces */
+    memset(ctx->framebuffer, ' ', 80);
     libsureelec_log("Sending init sequence to %s", device);
     libsureelec_write(ctx, init_seq, sizeof(init_seq));
     usleep(100000);
@@ -145,9 +146,11 @@ LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx) {
 
 LIBSUREELEC_EXPORT libsureelec_clear_display(libsureelec_ctx *ctx) {
     int line;
+    memset(ctx->framebuffer, ' ', 80);
 
     for (line = 1; line < 5; line++) {
-        libsureelec_write_line(ctx, "                    ", line);
+        libsureelec_write_line(ctx, ctx->framebuffer + (20 * (line - 1)), line);
+        usleep(100000);
     }
 }
 
@@ -155,6 +158,7 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
 
     int data_size;
 	unsigned char cmd[4] = {'\xFE', '\x47', '\x01', 0};
+    unsigned char *dest;
 
     if (line < 1 || line > 4) {
         return -1;
@@ -164,16 +168,24 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
     if (data_size > 20) {
         data_size = 20;
     }
+
+    dest = ctx->framebuffer + (20 * (line - 1));
+    dest = memcpy(dest, data, data_size);
+
+    printf("\nFramebuffer: %s\n", ctx->framebuffer);
+
     libsureelec_log("Writing %d characters to line %d: %s", data_size, line, data);
    
     cmd[3] = line; 
     libsureelec_write(ctx, cmd, sizeof(cmd));
-    libsureelec_write(ctx, data, data_size);
+    libsureelec_write(ctx, dest, 20);
+    usleep(100000);
 }
 
 LIBSUREELEC_EXPORT char * libsureelec_get_screen_size(libsureelec_ctx *ctx) {
     unsigned char cmd[2] = {'\xFE', '\x76'};
-    char *buf = strdup("                  ");
+    unsigned char *buf = malloc(20 * sizeof(unsigned char));
+    memset(buf, ' ', 20);
 
     libsureelec_write(ctx, cmd, sizeof(cmd));
     libsureelec_read(ctx, &buf, sizeof(buf));

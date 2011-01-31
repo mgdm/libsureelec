@@ -6,6 +6,7 @@
 
 typedef struct _libsureelec_ctx {
     int fd; /* Serial port file handle */
+    unsigned char framebuffer[80];
 } libsureelec_ctx;
 
 LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_create(const char *device, int debug);

@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
 //    data = libsureelec_get_device_type(ctx);
 //  printf("Data: %s", data);
     libsureelec_clear_display(ctx);
-    libsureelec_toggle_display(ctx);
     libsureelec_write_line(ctx, "Hello world!", 2);
     libsureelec_destroy(ctx);
 }
