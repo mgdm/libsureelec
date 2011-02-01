@@ -8,3 +8,6 @@ debug:
 
 test_prog:
 	gcc -g -o test test.c -L. -lsureelec
+
+macosx:
+	gcc -dynamiclib libsureelec.c -o libsureelec.dylib

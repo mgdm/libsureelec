@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <sys/select.h>
 
 #include "libsureelec.h"
 

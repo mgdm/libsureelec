@@ -4,12 +4,30 @@
 #   define LIBSUREELEC_EXPORT
 #endif
 
+#ifdef __APPLE__
+#include <string.h>
+/* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
+char *strndup (const char *s, size_t n)
+{
+	size_t len = strlen (s);
+	char *ret;
+
+	if (len <= n)
+		return strdup (s);
+
+	ret = malloc(n + 1);
+	strncpy(ret, s, n);
+	ret[n] = '\0';
+	return ret;
+}
+#endif
+
 typedef struct _libsureelec_ctx {
-    int fd; /* Serial port file handle */
-    unsigned char framebuffer[80];
-    int display_state;
-    int contrast;
-    int brightness;
+	int fd; /* Serial port file handle */
+	unsigned char framebuffer[80];
+	int display_state;
+	int contrast;
+	int brightness;
 } libsureelec_ctx;
 
 #define TEMP_OUT_OF_RANGE -999
@@ -24,3 +42,4 @@ LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contr
 LIBSUREELEC_EXPORT long libsureelec_get_temperature(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT long libsureelec_get_contrast(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT long libsureelec_get_brightness(libsureelec_ctx *ctx);
+
