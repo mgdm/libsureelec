@@ -12,7 +12,7 @@
 
 #include "libsureelec.h"
 
-static int libsureelec_debug_mode = 0;
+static int libsureelec_debug_mode = 1;
 
 static void libsureelec_log(const char *format, ...) {
     if (libsureelec_debug_mode) {
@@ -47,11 +47,15 @@ static libsureelec_read(libsureelec_ctx *ctx, void *buf, size_t count) {
 
         retval = select(ctx->fd + 1, &rfds, NULL, NULL, &tv);
         if (retval) {
-            int read_result = read(ctx->fd + 1, ((char *)buf) + read_count, count - read_count);
+            int read_result = read(ctx->fd, ((char *)buf) + read_count, count - read_count);
             if (read_result < 0) {
+                libsureelec_log("Got naff all.");
+                libsureelec_log("%s", strerror(errno));
                 return -1;
             } else {
                 read_count += read_result;
+                libsureelec_log("Got %d bytes, up to %d", read_result, read_count);
+                libsureelec_log("Buffer: %s\n", buf);
             }
         } else {
             libsureelec_log("No answer from device");
@@ -110,11 +114,13 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
 	port_config.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP
 			     | INLCR | IGNCR | ICRNL | IXON);
 	port_config.c_oflag &= ~OPOST;
-	port_config.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+//	port_config.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 	port_config.c_cflag &= ~(CSIZE | PARENB | CRTSCTS | CSTOPB);
 	port_config.c_cflag |= CS8 | CREAD | CLOCAL;
 	port_config.c_cc[VMIN] = 1;
-	port_config.c_cc[VTIME] = 10;
+	port_config.c_cc[VTIME] = 0;
+
+    port_config.c_lflag = 0;
 
     if(cfsetispeed(&port_config, B9600) < 0 || cfsetospeed(&port_config, B9600) < 0) {
         libsureelec_log("Failed to set port speed");
@@ -128,9 +134,13 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     
     /* Fill framebuffer with spaces */
     memset(ctx->framebuffer, ' ', 80);
+    /* LCD is on */
+    ctx->display_state = 1;
+    
+    /* Send init sequence */
     libsureelec_log("Sending init sequence to %s", device);
     libsureelec_write(ctx, init_seq, sizeof(init_seq));
-    usleep(100000);
+    usleep(10000);
     return ctx;
 }
 
@@ -148,7 +158,6 @@ LIBSUREELEC_EXPORT libsureelec_clear_display(libsureelec_ctx *ctx) {
 
     for (line = 1; line < 5; line++) {
         libsureelec_write_line(ctx, ctx->framebuffer + (20 * (line - 1)), line);
-        usleep(100000);
     }
 }
 
@@ -170,35 +179,132 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
     dest = ctx->framebuffer + (20 * (line - 1));
     dest = memcpy(dest, data, data_size);
 
-    libsureelec_log("Framebuffer: %s\n", ctx->framebuffer);
+    libsureelec_log("Framebuffer: %s", ctx->framebuffer);
    
     cmd[3] = line; 
     libsureelec_write(ctx, cmd, sizeof(cmd));
     libsureelec_write(ctx, dest, 20);
-    usleep(100000);
+    usleep(25000);
 }
 
-LIBSUREELEC_EXPORT char * libsureelec_get_screen_size(libsureelec_ctx *ctx) {
-    unsigned char cmd[2] = {'\xFE', '\x76'};
-    unsigned char *buf = malloc(20 * sizeof(unsigned char));
-    memset(buf, ' ', 20);
+LIBSUREELEC_EXPORT char * libsureelec_get_device_info(libsureelec_ctx *ctx) {
+    const unsigned char cmd[2] = { '\xFE', '\x76' };
+    unsigned char buf[11];
 
     libsureelec_write(ctx, cmd, sizeof(cmd));
+    usleep(10000);
     libsureelec_read(ctx, &buf, sizeof(buf));
-    return(buf);
-}
-
-LIBSUREELEC_EXPORT char * libsureelec_get_device_type(libsureelec_ctx *ctx) {
-    const unsigned char *cmd = "\3767";
-    char *buf = (char *) strdup("                  ");
-
-    libsureelec_write(ctx, cmd, sizeof(cmd));
-    usleep(1000);
-    libsureelec_read(ctx, &buf, sizeof(buf));
-    return(buf);
+    return(strndup(buf, 11));
 }
 
 LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx) {
     const unsigned char cmd[2] = { '\xFE', '\x64' };
     libsureelec_write(ctx, cmd, sizeof(cmd));
+    usleep(10000);
+}
+
+LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contrast) {
+    unsigned char cmd[3] = { '\xFE', '\x50', 0 };
+    if (contrast > 255) {
+        contrast = 255;
+    } else if (contrast < 1) {
+        contrast = 1;
+    }
+
+    cmd[2] = contrast;
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+    ctx->contrast = contrast;
+    usleep(10000);
+}
+
+LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int brightness) {
+    unsigned char cmd[3] = { '\xFE', '\x98', 0 };
+    if (brightness > 255) {
+        brightness = 255;
+    } else if (brightness < 1) {
+        brightness = 1;
+    }
+
+    cmd[2] = brightness;
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+    ctx->brightness = brightness;
+    usleep(10000);
+}
+
+LIBSUREELEC_EXPORT long libsureelec_get_temperature(libsureelec_ctx *ctx) {
+    const unsigned char cmd[2] = { '\xFE', '\x77' };
+    unsigned char buf[5];
+    char *p;
+    long retval;
+
+    memset(buf, ' ', sizeof(buf));
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+    usleep(10000);
+    libsureelec_read(ctx, buf, 5);
+
+    if (buf[0] == 'T') {
+        return TEMP_OUT_OF_RANGE;
+    }
+
+    if (buf[4] == 'C') {
+        libsureelec_log("Temperature is in degrees C.");
+    } else {
+        libsureelec_log("Temperature is in degrees F.");
+    }
+
+    buf[3] = '\0';
+    errno = 0;
+    retval = strtol(buf, &p, 10);
+    if (errno != 0 || *p != 0 || p == (char *) buf) {
+        libsureelec_log("Failed to convert temperature");
+        return TEMP_OUT_OF_RANGE;
+    }
+
+    return(retval);
+}
+
+LIBSUREELEC_EXPORT long libsureelec_get_contrast(libsureelec_ctx *ctx) {
+    const unsigned char cmd[2] = { '\xFE', '\x63' };
+    unsigned char buf[5];
+    char *p;
+    long retval;
+
+    memset(buf, ' ', sizeof(buf));
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+    usleep(10000);
+    libsureelec_read(ctx, buf, 5);
+
+    libsureelec_log("Contrast buffer: %s", buf);
+
+    errno = 0;
+    retval = strtol(buf + 2, &p, 10);
+    if (errno != 0 || *p != 0 || p == (char *) buf) {
+        libsureelec_log("Failed to convert contrast");
+        return -1;
+    }
+
+    return(retval);
+}
+
+LIBSUREELEC_EXPORT long libsureelec_get_brightness(libsureelec_ctx *ctx) {
+    const unsigned char cmd[2] = { '\xFE', '\x62' };
+    unsigned char buf[7];
+    char *p;
+    long retval;
+
+    memset(buf, ' ', sizeof(buf));
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+    usleep(10000);
+    libsureelec_read(ctx, buf, 7);
+
+    libsureelec_log("Brightness buffer: %s", buf);
+
+    errno = 0;
+    retval = strtol(buf + 4, &p, 10);
+    if (errno != 0 || *p != 0 || p == (char *) buf) {
+        libsureelec_log("Failed to convert brightness");
+        return -1;
+    }
+
+    return(retval);
 }
