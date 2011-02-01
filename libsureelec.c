@@ -13,7 +13,7 @@
 
 #include "libsureelec.h"
 
-static int libsureelec_debug_mode = 1;
+static int libsureelec_debug_mode = 0;
 
 static void libsureelec_log(const char *format, ...) {
     if (libsureelec_debug_mode) {
@@ -99,6 +99,12 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     struct termios port_config;
     int i;
 
+    if (debug > 0) {
+        libsureelec_debug_mode = 1;
+    } else {
+        libsureelec_debug_mode = 0;
+    }
+
     ctx->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
     if (ctx->fd == -1) {
         libsureelec_log("Failed to open port %s: ", device, strerror(errno));
@@ -142,6 +148,7 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     libsureelec_log("Sending init sequence to %s", device);
     libsureelec_write(ctx, init_seq, sizeof(init_seq));
     usleep(10000);
+
     return ctx;
 }
 
@@ -180,7 +187,7 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
     dest = ctx->framebuffer + (20 * (line - 1));
     dest = memcpy(dest, data, data_size);
 
-    libsureelec_log("Framebuffer: %s", ctx->framebuffer);
+    libsureelec_log("Framebuffer: %.80s", ctx->framebuffer);
    
     cmd[3] = line; 
     libsureelec_write(ctx, cmd, sizeof(cmd));
