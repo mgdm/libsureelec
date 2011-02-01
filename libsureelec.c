@@ -1,5 +1,5 @@
 /* libsureelec.c
- * Driver for SureElec LCD modules, ripped from lcdproc
+ * Driver for SureElec LCD modules
  */
 
 #include <stdlib.h>
