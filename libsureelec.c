@@ -56,7 +56,6 @@ static libsureelec_read(libsureelec_ctx *ctx, void *buf, size_t count) {
             } else {
                 read_count += read_result;
                 libsureelec_log("Got %d bytes, up to %d", read_result, read_count);
-                libsureelec_log("Buffer: %s\n", buf);
             }
         } else {
             libsureelec_log("No answer from device");
@@ -139,8 +138,6 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
         return NULL;
     }
     
-    /* Fill framebuffer with spaces */
-    memset(ctx->framebuffer, ' ', 80);
     /* LCD is on */
     ctx->display_state = 1;
     
@@ -149,14 +146,23 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     libsureelec_write(ctx, init_seq, sizeof(init_seq));
     usleep(10000);
 
+    libsureelec_get_device_info(ctx, &ctx->device_info);
+    /* Set up framebuffer */
+    ctx->framebuffer_size = ctx->device_info.width * ctx->device_info.height;
+    ctx->framebuffer = malloc(ctx->framebuffer_size * sizeof(unsigned char));
+    memset(ctx->framebuffer, ' ', ctx->framebuffer_size);
     return ctx;
 }
 
 LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx) {
-    if (ctx->fd) {
+    if (ctx->fd != -1) {
         close(ctx->fd);
     }
 
+    if (ctx->framebuffer != NULL) {
+        free(ctx->framebuffer);
+    }
+        
     free(ctx);
 }
 
@@ -195,14 +201,63 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
     usleep(25000);
 }
 
-LIBSUREELEC_EXPORT char * libsureelec_get_device_info(libsureelec_ctx *ctx) {
+LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsureelec_device_info *device_info) {
     const unsigned char cmd[2] = { '\xFE', '\x76' };
-    unsigned char buf[11];
+    unsigned char buf[11], temp[4];
+    char *end_ptr;
 
     libsureelec_write(ctx, cmd, sizeof(cmd));
     usleep(10000);
     libsureelec_read(ctx, &buf, sizeof(buf));
-    return(strndup(buf, 11));
+
+    errno = 0;
+    memset(temp, '\0', sizeof(temp));
+    memcpy(temp, buf, 2);
+    device_info->width = strtol(temp, &end_ptr, 10);
+    if (errno != 0 || *end_ptr != 0 || end_ptr == (char *) buf) {
+        libsureelec_log("Failed to get device info");
+        return -1;
+    }
+    
+    errno = 0;
+    memset(temp, '\0', sizeof(temp));
+    memcpy(temp, buf + 2, 2);
+    device_info->height = strtol(temp, &end_ptr, 10);
+    if (errno != 0 || *end_ptr != 0 || end_ptr == (char *) buf) {
+        libsureelec_log("Failed to get device info");
+        return -1;
+    }
+
+    if (buf[4] == 1) {
+        device_info->has_rx8025 = 1;
+    } else {
+        device_info->has_rx8025 = 0;
+    }
+    libsureelec_log("ROM size: %d", buf[5] - 48);
+    device_info->rom_size = 2 << (buf[5] - 49);
+
+    if (buf[6] == '1') {
+        device_info->has_light_sensor = 1;
+    } else {
+        device_info->has_light_sensor = 0;
+    }
+
+    if (buf[7] == '1' || buf[7] == '2') {
+        device_info->has_thermal_sensor = 1;
+    } else {
+        device_info->has_thermal_sensor = 0;
+    }
+
+    libsureelec_log("Found %d*%d device with %dKbit ROM", device_info->height, device_info->width, device_info->rom_size);
+    if (device_info->has_thermal_sensor) {
+        libsureelec_log("with thermal sensor");
+    }
+    
+    if (device_info->has_light_sensor) {
+        libsureelec_log("with light sensor");
+    }
+
+    return 0;
 }
 
 LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx) {
