@@ -6,17 +6,17 @@ it should work for the DE-LD021. too. It ought to detect the available device
 features.
 
 It uses waf as the build system. To install:
-<code>
+<pre>
 ./waf configure
 ./waf build
 ./waf install # as root, probably
-</code>
+</pre>
 
 There is an example program in test.c which prints some system information to
 the device, which will be compiled as build/sureelec_test. To run, use a
 command like:
 
-<code>
+<pre>
 ./build/sureelec_test /dev/ttyUSB0
-</code>
+</pre>
 
