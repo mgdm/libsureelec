@@ -14,4 +14,6 @@ def build(bld):
         headers = ('libsureelec.h'),
         target=APPNAME)
     bld.install_files('${PREFIX}/include', 'libsureelec.h')
+    bld.program(source='sureelec_test.c', target='sureelec_test', use=APPNAME)
+
 
