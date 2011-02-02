@@ -165,7 +165,7 @@ LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx) {
     free(ctx);
 }
 
-LIBSUREELEC_EXPORT libsureelec_clear_display(libsureelec_ctx *ctx) {
+LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx) {
     int line;
     memset(ctx->framebuffer, ' ', ctx->framebuffer_size);
 
