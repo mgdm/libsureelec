@@ -50,8 +50,7 @@ static libsureelec_read(libsureelec_ctx *ctx, void *buf, size_t count) {
         if (retval) {
             int read_result = read(ctx->fd, ((char *)buf) + read_count, count - read_count);
             if (read_result < 0) {
-                libsureelec_log("Got naff all.");
-                libsureelec_log("%s", strerror(errno));
+                libsureelec_log("Got no response: %s", strerror(errno));
                 return -1;
             } else {
                 read_count += read_result;
@@ -168,10 +167,10 @@ LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx) {
 
 LIBSUREELEC_EXPORT libsureelec_clear_display(libsureelec_ctx *ctx) {
     int line;
-    memset(ctx->framebuffer, ' ', 80);
+    memset(ctx->framebuffer, ' ', ctx->framebuffer_size);
 
-    for (line = 1; line < 5; line++) {
-        libsureelec_write_line(ctx, ctx->framebuffer + (20 * (line - 1)), line);
+    for (line = 0; line < ctx->device_info.height; line++) {
+        libsureelec_write_line(ctx, ctx->framebuffer + (ctx->device_info.width * line), line + 1);
     }
 }
 
@@ -181,23 +180,21 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
 	unsigned char cmd[4] = {'\xFE', '\x47', '\x01', 0};
     unsigned char *dest;
 
-    if (line < 1 || line > 4) {
+    if (line < 1 || line > ctx->device_info.height) {
         return -1;
     }
 
     data_size = strlen(data);
-    if (data_size > 20) {
-        data_size = 20;
+    if (data_size > ctx->device_info.width) {
+        data_size = ctx->device_info.width;
     }
 
-    dest = ctx->framebuffer + (20 * (line - 1));
+    dest = ctx->framebuffer + (ctx->device_info.width * (line - 1));
     dest = memcpy(dest, data, data_size);
 
-    libsureelec_log("Framebuffer: %.80s", ctx->framebuffer);
-   
     cmd[3] = line; 
     libsureelec_write(ctx, cmd, sizeof(cmd));
-    libsureelec_write(ctx, dest, 20);
+    libsureelec_write(ctx, dest, ctx->device_info.width);
     usleep(25000);
 }
 
