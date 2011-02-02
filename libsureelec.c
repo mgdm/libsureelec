@@ -297,13 +297,17 @@ LIBSUREELEC_EXPORT long libsureelec_get_temperature(libsureelec_ctx *ctx) {
     char *p;
     long retval;
 
+    if (ctx->device_info.has_thermal_sensor != 1) {
+        return LIBSUREELEC_NO_TEMP_SENSOR;
+    }
+
     memset(buf, ' ', sizeof(buf));
     libsureelec_write(ctx, cmd, sizeof(cmd));
     usleep(10000);
     libsureelec_read(ctx, buf, 5);
 
     if (buf[0] == 'T') {
-        return TEMP_OUT_OF_RANGE;
+        return LIBSUREELEC_TEMP_OUT_OF_RANGE;
     }
 
     if (buf[4] == 'C') {
@@ -317,7 +321,7 @@ LIBSUREELEC_EXPORT long libsureelec_get_temperature(libsureelec_ctx *ctx) {
     retval = strtol(buf, &p, 10);
     if (errno != 0 || *p != 0 || p == (char *) buf) {
         libsureelec_log("Failed to convert temperature");
-        return TEMP_OUT_OF_RANGE;
+        return LIBSUREELEC_TEMP_OUT_OF_RANGE;
     }
 
     return(retval);

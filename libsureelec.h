@@ -41,7 +41,8 @@ typedef struct _libsureelec_ctx {
 	int brightness;
 } libsureelec_ctx;
 
-#define TEMP_OUT_OF_RANGE -999
+#define LIBSUREELEC_TEMP_OUT_OF_RANGE -999
+#define LIBSUREELEC_NO_TEMP_SENSOR -998
 
 LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug);
 LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx);
