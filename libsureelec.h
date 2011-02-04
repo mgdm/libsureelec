@@ -25,19 +25,19 @@ char *strndup (const char *s, size_t n)
 }
 #endif
 
-typedef struct _libsureelec_device_info {
-    long width;
-    long height;
-    long rom_size;
-    long has_rx8025;
-    long has_light_sensor;
-    long has_thermal_sensor;
+typedef struct libsureelec_device_info {
+    int width;
+    int height;
+    int rom_size;
+    int has_rx8025;
+    int has_light_sensor;
+    int has_thermal_sensor;
 } libsureelec_device_info;
 
-typedef struct _libsureelec_ctx {
+typedef struct libsureelec_ctx {
 	int fd; /* Serial port file handle */
     libsureelec_device_info device_info;
-	unsigned char *framebuffer;
+	char *framebuffer;
     int framebuffer_size;
 	int display_state;
 	int contrast;
@@ -48,14 +48,15 @@ typedef struct _libsureelec_ctx {
 #define LIBSUREELEC_NO_TEMP_SENSOR -998
 
 LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug);
-LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT void libsureelec_destroy(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *data, int line);
 LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsureelec_device_info *device_info);
 LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contrast);
-LIBSUREELEC_EXPORT long libsureelec_get_temperature(libsureelec_ctx *ctx);
-LIBSUREELEC_EXPORT long libsureelec_get_contrast(libsureelec_ctx *ctx);
-LIBSUREELEC_EXPORT long libsureelec_get_brightness(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int brightness);
+LIBSUREELEC_EXPORT int libsureelec_get_temperature(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT int libsureelec_get_contrast(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT int libsureelec_get_brightness(libsureelec_ctx *ctx);
 
 #endif

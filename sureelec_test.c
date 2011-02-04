@@ -11,10 +11,10 @@ void print_usage(const char *bin_name) {
     printf("Usage: %s DEVICE\n", bin_name);
 }
 
-char *print_uptime(long up_secs, unsigned char *retval) {
+char *print_uptime(long up_secs, char *retval) {
     long days, hours, mins, secs;
     if (retval == NULL) {
-       retval = malloc(20 * sizeof(unsigned char));
+       retval = malloc(20 * sizeof(char));
     }
 
     mins = up_secs / 60;
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     int i;
     struct sysinfo sys_info;
     char hostname[20];
-    unsigned char *string, *uptime_string;
+    char *string, *uptime_string;
 
     if (argc < 2) {
         print_usage(argv[0]);
@@ -59,8 +59,8 @@ int main(int argc, char **argv) {
     gethostname(hostname, 20);
     libsureelec_write_line(ctx, hostname, 1);
     
-    string = (unsigned char *) calloc(20, sizeof(unsigned char));
-    uptime_string = (unsigned char *) calloc(20, sizeof(unsigned char));
+    string = (char *) calloc(20, sizeof(char));
+    uptime_string = (char *) calloc(20, sizeof(char));
     while(1) {
         long foo = libsureelec_get_temperature(ctx);
         sysinfo(&sys_info);

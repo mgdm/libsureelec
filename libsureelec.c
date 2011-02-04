@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <termios.h>
 #include <fcntl.h>
@@ -26,7 +27,7 @@ static void libsureelec_log(const char *format, ...) {
     }
 }
 
-static libsureelec_read(libsureelec_ctx *ctx, void *buf, size_t count) {
+static int libsureelec_read(libsureelec_ctx *ctx, void *buf, size_t count) {
     fd_set rfds;
     struct timeval tv;
     int read_count;
@@ -64,7 +65,7 @@ static libsureelec_read(libsureelec_ctx *ctx, void *buf, size_t count) {
     return read_count;
 }
 
-static int libsureelec_write(libsureelec_ctx *ctx, const unsigned char *seq, int count) {
+static int libsureelec_write(libsureelec_ctx *ctx, const char *seq, int count) {
     int written, written_count = 0;
     while (written_count < count) {
         written = write(ctx->fd, seq, count - written_count);
@@ -78,7 +79,7 @@ static int libsureelec_write(libsureelec_ctx *ctx, const unsigned char *seq, int
     return written_count;
 }
 
-static int libsureelec_write_char(libsureelec_ctx *ctx, const unsigned char seq) {
+static int libsureelec_write_char(libsureelec_ctx *ctx, const char seq) {
     int written = 0;
 
     written = write(ctx->fd, &seq, 1);
@@ -91,7 +92,7 @@ static int libsureelec_write_char(libsureelec_ctx *ctx, const unsigned char seq)
 }
 
 LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug) {
-    unsigned char init_seq[5] = {'\xFE', 'S', 'u', 'r', 'e'};
+    char init_seq[5] = {'\xFE', 'S', 'u', 'r', 'e'};
     libsureelec_ctx *ctx = (libsureelec_ctx *) calloc(1, sizeof(libsureelec_ctx));
     ctx->fd = -1;
     struct termios port_config;
@@ -148,12 +149,12 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     libsureelec_get_device_info(ctx, &ctx->device_info);
     /* Set up framebuffer */
     ctx->framebuffer_size = ctx->device_info.width * ctx->device_info.height;
-    ctx->framebuffer = malloc(ctx->framebuffer_size * sizeof(unsigned char));
+    ctx->framebuffer = malloc(ctx->framebuffer_size * sizeof(char));
     memset(ctx->framebuffer, ' ', ctx->framebuffer_size);
     return ctx;
 }
 
-LIBSUREELEC_EXPORT libsureelec_ctx *libsureelec_destroy(libsureelec_ctx *ctx) {
+LIBSUREELEC_EXPORT void libsureelec_destroy(libsureelec_ctx *ctx) {
     if (ctx->fd != -1) {
         close(ctx->fd);
     }
@@ -177,8 +178,8 @@ LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx) {
 LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *data, int line) {
 
     int data_size;
-	unsigned char cmd[4] = {'\xFE', '\x47', '\x01', 0};
-    unsigned char *dest;
+	char cmd[4] = {'\xFE', '\x47', '\x01', 0};
+    char *dest;
 
     if (line < 1 || line > ctx->device_info.height) {
         return -1;
@@ -196,11 +197,12 @@ LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *
     libsureelec_write(ctx, cmd, sizeof(cmd));
     libsureelec_write(ctx, dest, ctx->device_info.width);
     usleep(25000);
+    return 0;
 }
 
 LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsureelec_device_info *device_info) {
-    const unsigned char cmd[2] = { '\xFE', '\x76' };
-    unsigned char buf[11], temp[4];
+    const char cmd[2] = { '\xFE', '\x76' };
+    char buf[11], temp[4];
     char *end_ptr;
 
     libsureelec_write(ctx, cmd, sizeof(cmd));
@@ -258,13 +260,13 @@ LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsure
 }
 
 LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx) {
-    const unsigned char cmd[2] = { '\xFE', '\x64' };
+    const char cmd[2] = { '\xFE', '\x64' };
     libsureelec_write(ctx, cmd, sizeof(cmd));
     usleep(10000);
 }
 
 LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contrast) {
-    unsigned char cmd[3] = { '\xFE', '\x50', 0 };
+    char cmd[3] = { '\xFE', '\x50', 0 };
     if (contrast > 255) {
         contrast = 255;
     } else if (contrast < 1) {
@@ -278,7 +280,7 @@ LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contr
 }
 
 LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int brightness) {
-    unsigned char cmd[3] = { '\xFE', '\x98', 0 };
+    char cmd[3] = { '\xFE', '\x98', 0 };
     if (brightness > 255) {
         brightness = 255;
     } else if (brightness < 1) {
@@ -291,11 +293,11 @@ LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int bri
     usleep(10000);
 }
 
-LIBSUREELEC_EXPORT long libsureelec_get_temperature(libsureelec_ctx *ctx) {
-    const unsigned char cmd[2] = { '\xFE', '\x77' };
-    unsigned char buf[5];
+LIBSUREELEC_EXPORT int libsureelec_get_temperature(libsureelec_ctx *ctx) {
+    const char cmd[2] = { '\xFE', '\x77' };
+    char buf[5];
     char *p;
-    long retval;
+    int retval;
 
     if (ctx->device_info.has_thermal_sensor != 1) {
         return LIBSUREELEC_NO_TEMP_SENSOR;
@@ -327,11 +329,11 @@ LIBSUREELEC_EXPORT long libsureelec_get_temperature(libsureelec_ctx *ctx) {
     return(retval);
 }
 
-LIBSUREELEC_EXPORT long libsureelec_get_contrast(libsureelec_ctx *ctx) {
-    const unsigned char cmd[2] = { '\xFE', '\x63' };
-    unsigned char buf[5];
+LIBSUREELEC_EXPORT int libsureelec_get_contrast(libsureelec_ctx *ctx) {
+    const char cmd[2] = { '\xFE', '\x63' };
+    char buf[5];
     char *p;
-    long retval;
+    int retval;
 
     memset(buf, ' ', sizeof(buf));
     libsureelec_write(ctx, cmd, sizeof(cmd));
@@ -350,11 +352,11 @@ LIBSUREELEC_EXPORT long libsureelec_get_contrast(libsureelec_ctx *ctx) {
     return(retval);
 }
 
-LIBSUREELEC_EXPORT long libsureelec_get_brightness(libsureelec_ctx *ctx) {
-    const unsigned char cmd[2] = { '\xFE', '\x62' };
-    unsigned char buf[7];
+LIBSUREELEC_EXPORT int libsureelec_get_brightness(libsureelec_ctx *ctx) {
+    const char cmd[2] = { '\xFE', '\x62' };
+    char buf[7];
     char *p;
-    long retval;
+    int retval;
 
     memset(buf, ' ', sizeof(buf));
     libsureelec_write(ctx, cmd, sizeof(cmd));
