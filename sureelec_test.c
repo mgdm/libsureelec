@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/sysinfo.h>
 #include <signal.h>
 #include <time.h>
@@ -35,10 +36,10 @@ char *print_uptime(long up_secs, char *retval) {
 
 int main(int argc, char **argv) {
     libsureelec_ctx *ctx;
-    int i;
+    int i, hostname_len;
     struct sysinfo sys_info;
     char hostname[20];
-    char *string, *uptime_string;
+    char *string, *uptime_string, *time_string;
 
     if (argc < 2) {
         print_usage(argv[0]);
@@ -52,18 +53,37 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    if (daemon(0, 0) == -1) {
+        printf("Daemonizing failed.\n");
+        return -1;
+    }
+
     libsureelec_set_contrast(ctx, 1);
     libsureelec_set_brightness(ctx, 254);
     libsureelec_clear_display(ctx);
 
-    gethostname(hostname, 20);
-    libsureelec_write_line(ctx, hostname, 1);
-    
+    gethostname(hostname, 11);
+    hostname_len = strlen(hostname);
+    if (hostname_len > 11) {
+        hostname_len = 11;
+    }
+
     string = (char *) calloc(20, sizeof(char));
     uptime_string = (char *) calloc(20, sizeof(char));
+    time_string = (char *) malloc(20 * sizeof(char));
+    time_t current_time;
+    struct tm *tmp;
+
     while(1) {
         long foo = libsureelec_get_temperature(ctx);
         sysinfo(&sys_info);
+        memset(time_string, ' ', sizeof(time_string));
+        current_time = time(NULL);
+        tmp = localtime(&current_time);
+        strftime(time_string + 11, 9, "%H:%M:%S", tmp);
+        memcpy(time_string, hostname, hostname_len);
+        memcpy(time_string + hostname_len, "          ", 11 - hostname_len);
+        libsureelec_write_line(ctx, time_string, 1);
 
         snprintf(string, 20, "Temp is %ld deg C", foo);
         libsureelec_write_line(ctx, string, 2);
