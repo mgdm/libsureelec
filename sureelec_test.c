@@ -9,7 +9,8 @@
     
 
 void print_usage(const char *bin_name) {
-    printf("Usage: %s DEVICE\n", bin_name);
+    printf("Usage: %s DEVICE DAEMON\n", bin_name);
+    printf("If DAEMON is the character 1, the program will go into the background.\n");
 }
 
 char *print_uptime(long up_secs, char *retval) {
@@ -53,9 +54,11 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    if (daemon(0, 0) == -1) {
-        printf("Daemonizing failed.\n");
-        return -1;
+    if (argc > 2 && *argv[2] == '1') {
+        if (daemon(0, 0) == -1) {
+            printf("Daemonizing failed.\n");
+            return -1;
+        }
     }
 
     libsureelec_set_contrast(ctx, 1);
