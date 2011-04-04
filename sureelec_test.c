@@ -73,17 +73,17 @@ int main(int argc, char **argv) {
 
     string = (char *) calloc(20, sizeof(char));
     uptime_string = (char *) calloc(20, sizeof(char));
-    time_string = (char *) malloc(20 * sizeof(char));
+    time_string = (char *) calloc(20, sizeof(char));
     time_t current_time;
     struct tm *tmp;
 
     while(1) {
         long foo = libsureelec_get_temperature(ctx);
         sysinfo(&sys_info);
-        memset(time_string, ' ', sizeof(time_string));
+        memset(time_string, ' ', 20);
         current_time = time(NULL);
         tmp = localtime(&current_time);
-        strftime(time_string + 11, 9, "%H:%M:%S", tmp);
+        strftime(time_string + 12, 9, "%H:%M:%S", tmp);
         memcpy(time_string, hostname, hostname_len);
         memcpy(time_string + hostname_len, "          ", 11 - hostname_len);
         libsureelec_write_line(ctx, time_string, 1);
