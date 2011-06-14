@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <time.h>
 #include <sys/select.h>
 
 #include "libsureelec.h"
@@ -76,6 +77,10 @@ static int libsureelec_write(libsureelec_ctx *ctx, const char *seq, int count) {
         written_count += written;
     }
 
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 1000000;
+    nanosleep(&ts, NULL);
     return written_count;
 }
 
@@ -96,7 +101,6 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     libsureelec_ctx *ctx = (libsureelec_ctx *) calloc(1, sizeof(libsureelec_ctx));
     ctx->fd = -1;
     struct termios port_config;
-    int i;
 
     if (debug > 0) {
         libsureelec_debug_mode = 1;
@@ -144,7 +148,6 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     /* Send init sequence */
     libsureelec_log("Sending init sequence to %s", device);
     libsureelec_write(ctx, init_seq, sizeof(init_seq));
-    usleep(10000);
 
     libsureelec_get_device_info(ctx, &ctx->device_info);
     /* Set up framebuffer */
@@ -196,7 +199,6 @@ LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, const char
     cmd[3] = line; 
     libsureelec_write(ctx, cmd, sizeof(cmd));
     libsureelec_write(ctx, dest, ctx->device_info.width);
-    usleep(25000);
     return 0;
 }
 
@@ -206,7 +208,6 @@ LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsure
     char *end_ptr;
 
     libsureelec_write(ctx, cmd, sizeof(cmd));
-    usleep(10000);
     libsureelec_read(ctx, &buf, sizeof(buf));
 
     errno = 0;
@@ -262,7 +263,6 @@ LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsure
 LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx) {
     const char cmd[2] = { '\xFE', '\x64' };
     libsureelec_write(ctx, cmd, sizeof(cmd));
-    usleep(10000);
 }
 
 LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contrast) {
@@ -276,7 +276,6 @@ LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contr
     cmd[2] = contrast;
     libsureelec_write(ctx, cmd, sizeof(cmd));
     ctx->contrast = contrast;
-    usleep(10000);
 }
 
 LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int brightness) {
@@ -290,7 +289,6 @@ LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int bri
     cmd[2] = brightness;
     libsureelec_write(ctx, cmd, sizeof(cmd));
     ctx->brightness = brightness;
-    usleep(10000);
 }
 
 LIBSUREELEC_EXPORT int libsureelec_get_temperature(libsureelec_ctx *ctx) {
@@ -305,7 +303,6 @@ LIBSUREELEC_EXPORT int libsureelec_get_temperature(libsureelec_ctx *ctx) {
 
     memset(buf, ' ', sizeof(buf));
     libsureelec_write(ctx, cmd, sizeof(cmd));
-    usleep(10000);
     libsureelec_read(ctx, buf, 5);
 
     if (buf[0] == 'T') {
@@ -337,7 +334,6 @@ LIBSUREELEC_EXPORT int libsureelec_get_contrast(libsureelec_ctx *ctx) {
 
     memset(buf, ' ', sizeof(buf));
     libsureelec_write(ctx, cmd, sizeof(cmd));
-    usleep(10000);
     libsureelec_read(ctx, buf, 5);
 
     libsureelec_log("Contrast buffer: %s", buf);
@@ -360,7 +356,6 @@ LIBSUREELEC_EXPORT int libsureelec_get_brightness(libsureelec_ctx *ctx) {
 
     memset(buf, ' ', sizeof(buf));
     libsureelec_write(ctx, cmd, sizeof(cmd));
-    usleep(10000);
     libsureelec_read(ctx, buf, 7);
 
     libsureelec_log("Brightness buffer: %s", buf);

@@ -37,7 +37,7 @@ char *print_uptime(long up_secs, char *retval) {
 
 int main(int argc, char **argv) {
     libsureelec_ctx *ctx;
-    int i, hostname_len;
+    int hostname_len;
     struct sysinfo sys_info;
     char hostname[20];
     char *string, *uptime_string, *time_string;
