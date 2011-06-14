@@ -15,5 +15,6 @@ def build(bld):
         target=APPNAME)
     bld.install_files('${PREFIX}/include', 'libsureelec.h')
     bld.program(source='sureelec_test.c', target='sureelec_test', use=APPNAME)
+    bld.program(source='sureelec_test2.c', target='sureelec_test2', use=APPNAME, lib=['readline'])
 
 

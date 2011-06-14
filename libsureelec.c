@@ -79,7 +79,7 @@ static int libsureelec_write(libsureelec_ctx *ctx, const char *seq, int count) {
 
     struct timespec ts;
     ts.tv_sec = 0;
-    ts.tv_nsec = 1000000;
+    ts.tv_nsec = 10000000;
     nanosleep(&ts, NULL);
     return written_count;
 }
