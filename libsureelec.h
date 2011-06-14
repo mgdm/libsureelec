@@ -50,7 +50,7 @@ typedef struct libsureelec_ctx {
 LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug);
 LIBSUREELEC_EXPORT void libsureelec_destroy(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx);
-LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *data, int line);
+LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, const char *data, int line);
 LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsureelec_device_info *device_info);
 LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contrast);

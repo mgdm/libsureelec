@@ -171,11 +171,11 @@ LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx) {
     memset(ctx->framebuffer, ' ', ctx->framebuffer_size);
 
     for (line = 0; line < ctx->device_info.height; line++) {
-        libsureelec_write_line(ctx, ctx->framebuffer + (ctx->device_info.width * line), line + 1);
+        libsureelec_display_line(ctx, ctx->framebuffer + (ctx->device_info.width * line), line + 1);
     }
 }
 
-LIBSUREELEC_EXPORT int libsureelec_write_line(libsureelec_ctx *ctx, const char *data, int line) {
+LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, const char *data, int line) {
 
     int data_size;
 	char cmd[4] = {'\xFE', '\x47', '\x01', 0};

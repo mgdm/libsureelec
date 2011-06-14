@@ -86,19 +86,19 @@ int main(int argc, char **argv) {
         strftime(time_string + 12, 9, "%H:%M:%S", tmp);
         memcpy(time_string, hostname, hostname_len);
         memcpy(time_string + hostname_len, "          ", 11 - hostname_len);
-        libsureelec_write_line(ctx, time_string, 1);
+        libsureelec_display_line(ctx, time_string, 1);
 
         snprintf(string, 20, "Temp is %ld deg C", foo);
-        libsureelec_write_line(ctx, string, 2);
+        libsureelec_display_line(ctx, string, 2);
 
         uptime_string = print_uptime(sys_info.uptime, uptime_string);
-        libsureelec_write_line(ctx, uptime_string, 3);
+        libsureelec_display_line(ctx, uptime_string, 3);
 
         snprintf(string, 20, "Load %.2lf %.2lf %.2lf", 
                 sys_info.loads[0] / 65536.0, 
                 sys_info.loads[1] / 65536.0, 
                 sys_info.loads[2] / 65536.0);
-        libsureelec_write_line(ctx, string, 4);
+        libsureelec_display_line(ctx, string, 4);
 
         usleep(50000);
     }
