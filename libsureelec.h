@@ -47,10 +47,15 @@ typedef struct libsureelec_ctx {
 #define LIBSUREELEC_TEMP_OUT_OF_RANGE -999
 #define LIBSUREELEC_NO_TEMP_SENSOR -998
 
+#define LIBSUREELEC_UP 0
+#define LIBSUREELEC_DOWN 1
+#define LIBSUREELEC_LEFT 2
+#define LIBSUREELEC_RIGHT 3
+
 LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug);
 LIBSUREELEC_EXPORT void libsureelec_destroy(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx);
-LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, const char *data, int line);
+LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, int line, const char *data);
 LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsureelec_device_info *device_info);
 LIBSUREELEC_EXPORT void libsureelec_toggle_display(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_set_contrast(libsureelec_ctx *ctx, int contrast);
@@ -58,5 +63,6 @@ LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int bri
 LIBSUREELEC_EXPORT int libsureelec_get_temperature(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_get_contrast(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_get_brightness(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT void libsureelec_scroll(libsureelec_ctx *ctx, int line, int direction, int distance, int wrap);
 
 #endif

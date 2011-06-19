@@ -79,7 +79,7 @@ static int libsureelec_write(libsureelec_ctx *ctx, const char *seq, int count) {
 
     struct timespec ts;
     ts.tv_sec = 0;
-    ts.tv_nsec = 10000000;
+    ts.tv_nsec = 25000000;
     nanosleep(&ts, NULL);
     return written_count;
 }
@@ -174,11 +174,11 @@ LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx) {
     memset(ctx->framebuffer, ' ', ctx->framebuffer_size);
 
     for (line = 0; line < ctx->device_info.height; line++) {
-        libsureelec_display_line(ctx, ctx->framebuffer + (ctx->device_info.width * line), line + 1);
+        libsureelec_display_line(ctx, line + 1, ctx->framebuffer + (ctx->device_info.width * line));
     }
 }
 
-LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, const char *data, int line) {
+LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, int line, const char *data) {
 
     int data_size;
 	char cmd[4] = {'\xFE', '\x47', '\x01', 0};
@@ -188,13 +188,19 @@ LIBSUREELEC_EXPORT int libsureelec_display_line(libsureelec_ctx *ctx, const char
         return -1;
     }
 
-    data_size = strlen(data);
-    if (data_size > ctx->device_info.width) {
-        data_size = ctx->device_info.width;
-    }
+    if (data == NULL) {
+        /* We're just refreshing the display, so write what's in the framebuffer */
+        dest = &ctx->framebuffer[(line - 1) * ctx->device_info.width];
+    } else {
+        data_size = strlen(data);
+        if (data_size > ctx->device_info.width) {
+            data_size = ctx->device_info.width;
+        }
 
-    dest = ctx->framebuffer + (ctx->device_info.width * (line - 1));
-    dest = memcpy(dest, data, data_size);
+        dest = ctx->framebuffer + (ctx->device_info.width * (line - 1));
+        memset(dest, ' ', ctx->device_info.width);
+        dest = memcpy(dest, data, data_size);
+    }
 
     cmd[3] = line; 
     libsureelec_write(ctx, cmd, sizeof(cmd));
@@ -368,4 +374,32 @@ LIBSUREELEC_EXPORT int libsureelec_get_brightness(libsureelec_ctx *ctx) {
     }
 
     return(retval);
+}
+
+LIBSUREELEC_EXPORT void libsureelec_refresh(libsureelec_ctx *ctx) {
+    int i;
+    for (i = 1; i <= ctx->device_info.height; i++) {
+        libsureelec_display_line(ctx, i, NULL);
+    }
+}
+
+LIBSUREELEC_EXPORT void libsureelec_scroll(libsureelec_ctx *ctx, int line, int direction, int distance, int wrap) {
+    switch (direction) {
+        case LIBSUREELEC_UP:
+            if (distance > 4) {
+                distance = 4;
+            }
+            char *src = &ctx->framebuffer[(distance) * ctx->device_info.width];
+            memmove(ctx->framebuffer, src, (ctx->device_info.height - distance) * ctx->device_info.width);
+            libsureelec_refresh(ctx);
+            break;
+        case LIBSUREELEC_DOWN:
+            if (distance > 4) {
+                distance = 4;
+            }
+            char *dest = &ctx->framebuffer[(distance) * ctx->device_info.width];
+            memmove(dest, ctx->framebuffer, (ctx->device_info.height - distance) * ctx->device_info.width);
+            libsureelec_refresh(ctx);
+            break;
+    }
 }
