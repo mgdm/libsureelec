@@ -39,17 +39,14 @@ int main(int argc, char **argv) {
         memset(buf, ' ', 20);
         len = strlen(input);
         memcpy(buf, input, (len > 20) ? 20 : len);
-        printf("Writing %s to screen line %d\n", input, current + 1);
 
         if (scroll == 1) {
-            printf("Scrolling...\n");
             libsureelec_scroll(ctx, 0, LIBSUREELEC_UP, 1, 0);
         }
 
         libsureelec_display_line(ctx, current + 1, buf);
 
         current++;
-        printf("Current: %d\n", current);
         
         if (current == 4) {
             scroll = 1;

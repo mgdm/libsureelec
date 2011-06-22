@@ -153,6 +153,8 @@ LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int d
     /* Set up framebuffer */
     ctx->framebuffer_size = ctx->device_info.width * ctx->device_info.height;
     ctx->framebuffer = malloc(ctx->framebuffer_size * sizeof(char));
+    libsureelec_log("Framebuffer size is %d chars\n", ctx->framebuffer_size);
+
     memset(ctx->framebuffer, ' ', ctx->framebuffer_size);
     return ctx;
 }
@@ -254,7 +256,7 @@ LIBSUREELEC_EXPORT int libsureelec_get_device_info(libsureelec_ctx *ctx, libsure
         device_info->has_thermal_sensor = 0;
     }
 
-    libsureelec_log("Found %d*%d device with %dKbit ROM", device_info->height, device_info->width, device_info->rom_size);
+    libsureelec_log("Found %dx%d device with %dKbit ROM", device_info->width, device_info->height, device_info->rom_size);
     if (device_info->has_thermal_sensor) {
         libsureelec_log("with thermal sensor");
     }
