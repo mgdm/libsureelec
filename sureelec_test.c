@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    ctx = libsureelec_create(argv[1], 1);
+    ctx = libsureelec_create(argv[1], 0);
     
     if (ctx == NULL) {
         printf("Failed to initialize context\n");
