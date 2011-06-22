@@ -385,7 +385,7 @@ LIBSUREELEC_EXPORT void libsureelec_refresh(libsureelec_ctx *ctx) {
     }
 }
 
-LIBSUREELEC_EXPORT void libsureelec_scroll(libsureelec_ctx *ctx, int line, int direction, int distance, int wrap) {
+LIBSUREELEC_EXPORT void libsureelec_scroll_vert(libsureelec_ctx *ctx, int line, int direction, int distance, int wrap) {
     switch (direction) {
         case LIBSUREELEC_UP:
             if (distance > 4) {

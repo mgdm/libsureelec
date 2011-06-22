@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
         memcpy(buf, input, (len > 20) ? 20 : len);
 
         if (scroll == 1) {
-            libsureelec_scroll(ctx, 0, LIBSUREELEC_UP, 1, 0);
+            libsureelec_scroll_vert(ctx, 0, LIBSUREELEC_UP, 1, 0);
         }
 
         libsureelec_display_line(ctx, current + 1, buf);
