@@ -2,7 +2,11 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef __linux__
 #include <sys/sysinfo.h>
+#endif 
+
 #include <signal.h>
 #include <time.h>
 #include "libsureelec.h"
@@ -38,7 +42,11 @@ char *print_uptime(long up_secs, char *retval) {
 int main(int argc, char **argv) {
     libsureelec_ctx *ctx;
     int hostname_len;
+
+#ifdef __linux__
     struct sysinfo sys_info;
+#endif
+
     char hostname[20];
     char *string, *uptime_string, *time_string;
 
@@ -79,7 +87,6 @@ int main(int argc, char **argv) {
 
     while(1) {
         long foo = libsureelec_get_temperature(ctx);
-        sysinfo(&sys_info);
         memset(time_string, ' ', 20);
         current_time = time(NULL);
         tmp = localtime(&current_time);
@@ -91,6 +98,8 @@ int main(int argc, char **argv) {
         snprintf(string, 20, "Temp is %ld deg C", foo);
         libsureelec_display_line(ctx, 2, string);
 
+#ifdef __linux__
+        sysinfo(&sys_info);
         uptime_string = print_uptime(sys_info.uptime, uptime_string);
         libsureelec_display_line(ctx, 3, uptime_string);
 
@@ -99,6 +108,7 @@ int main(int argc, char **argv) {
                 sys_info.loads[1] / 65536.0, 
                 sys_info.loads[2] / 65536.0);
         libsureelec_display_line(ctx, 4, string);
+#endif
 
         usleep(50000);
     }
