@@ -9,6 +9,7 @@
 
 #ifdef __APPLE__
 #include <string.h>
+#include <stdlib.h>
 /* Mac OS X don't have strndup even if _GNU_SOURCE is defined */
 char *strndup (const char *s, size_t n)
 {
