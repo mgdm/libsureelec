@@ -21,3 +21,9 @@ There's another example in sureelec_test2.c which accepts input using a readline
 interface, which will then be sent straight to the device. It is run similarly:
 
     ./build/sureelec_test2 /dev/ttyUSB0
+
+If you want to see the characters available in the display, you can try the
+map_chars utility, which will run through all the ASCII characters from 32 (a
+space) up to 255. There are a lot of Kanji-style characters in the high ASCII
+values.
+
