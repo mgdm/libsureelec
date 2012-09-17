@@ -53,6 +53,9 @@ typedef struct libsureelec_ctx {
 #define LIBSUREELEC_LEFT 2
 #define LIBSUREELEC_RIGHT 3
 
+#define LIBSUREELEC_CHAR_WIDTH 5
+#define LIBSUREELEC_CHAR_HEIGHT 8
+
 LIBSUREELEC_EXPORT libsureelec_ctx* libsureelec_create(const char *device, int debug);
 LIBSUREELEC_EXPORT void libsureelec_destroy(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_clear_display(libsureelec_ctx *ctx);
@@ -65,5 +68,6 @@ LIBSUREELEC_EXPORT int libsureelec_get_temperature(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_get_contrast(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_get_brightness(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_scroll_vert(libsureelec_ctx *ctx, int line, int direction, int distance, int wrap);
+LIBSUREELEC_EXPORT int libsureelec_set_custom_char(libsureelec_ctx *ctx, int character, unsigned char *bits);
 
 #endif

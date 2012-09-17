@@ -405,3 +405,20 @@ LIBSUREELEC_EXPORT void libsureelec_scroll_vert(libsureelec_ctx *ctx, int line, 
             break;
     }
 }
+
+LIBSUREELEC_EXPORT int libsureelec_set_custom_char(libsureelec_ctx *ctx, int character, unsigned char *bits) {
+	unsigned char cmd[11] = {'\xFE', '\x4E', 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	unsigned char mask = (1 << LIBSUREELEC_CHAR_WIDTH) - 1;
+	int row;
+
+	if (character < 0 || character > 7) {
+		libsureelec_log("Attempt to set custom character out of range: %d", character);
+		return -1;
+	}
+
+	for (row = 0; row < LIBSUREELEC_CHAR_HEIGHT; row++) {
+		cmd[row + 3] = bits[row] & mask;
+	}
+
+    libsureelec_write(ctx, cmd, sizeof(cmd));
+}
