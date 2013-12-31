@@ -1,0 +1,4 @@
+lib_LTLIBRARIES=libsureelec.la
+libsureelec_la_SOURCES=libsureelec.c
+include_HEADERS=libsureelec.h
+
