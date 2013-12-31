@@ -1,3 +1,4 @@
 .lock-wafbuild
 .waf*
 build/
+*.o
