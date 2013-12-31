@@ -64,6 +64,7 @@ LIBSUREELEC_EXPORT void libsureelec_set_brightness(libsureelec_ctx *ctx, int bri
 LIBSUREELEC_EXPORT int libsureelec_get_temperature(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_get_contrast(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT int libsureelec_get_brightness(libsureelec_ctx *ctx);
+LIBSUREELEC_EXPORT void libsureelec_refresh(libsureelec_ctx *ctx);
 LIBSUREELEC_EXPORT void libsureelec_scroll_vert(libsureelec_ctx *ctx, int line, int direction, int distance, int wrap);
 
 #endif
