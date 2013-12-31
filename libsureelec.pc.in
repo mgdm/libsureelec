@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libsureelec
+Description: A library to drive Sure Electronics LCD displays.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lsureelec
+Cflags: -I${includedir}

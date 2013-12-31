@@ -7,6 +7,6 @@ LT_INIT
 AC_PROG_CC
 AC_PROG_INSTALL
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libsureelec.pc])
 
 AC_OUTPUT
